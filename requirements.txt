@@ -1,0 +1,8 @@
+# Dependencias de PRODUCCIÓN (las que van en el venv limpio de build).
+fastapi>=0.115
+uvicorn>=0.30
+sqlalchemy>=2.0
+jinja2>=3.1
+pywebview>=5.0
+anthropic>=0.40
+python-multipart>=0.0.9

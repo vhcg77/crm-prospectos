@@ -1,0 +1,22 @@
+# Datos locales
+data/crm_dev.db
+data/*.db-journal
+
+# Secretos
+.env
+*.key
+
+# Build
+build/
+dist/
+*.spec.bak
+__pycache__/
+*.pyc
+
+# Entornos
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/

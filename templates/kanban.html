@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Kanban — {{ app_name }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2"></script>
+</head>
+<body class="bg-slate-50">
+  <div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Kanban — {{ app_name }}</h1>
+      <a href="/" class="text-blue-600 hover:underline">&larr; Volver a lista</a>
+    </div>
+    
+    <div class="grid grid-cols-5 gap-4">
+      {% for etapa in etapas %}
+      <div class="bg-gray-200 rounded-lg p-3">
+        <h2 class="font-semibold text-gray-700 mb-3">{{ etapa }} <span class="text-sm font-normal text-gray-500">({{ columnas[etapa]|length }})</span></h2>
+        
+        <div class="min-h-[300px] flex flex-col gap-2 sortable-col" data-etapa="{{ etapa }}">
+          {% for p in columnas[etapa] %}
+          <div class="bg-white p-3 rounded shadow cursor-grab border-l-4 border-{{ color_etapa[etapa] }}-500" data-id="{{ p.id }}">
+            <div class="font-medium text-sm">{{ p.nombre }}</div>
+            <div class="text-xs text-gray-500">{{ p.empresa or '-' }}</div>
+            <div class="text-xs text-gray-400 mt-1">${{ "{:,}".format(p.valor_estimado) }} CLP</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script>
+    document.querySelectorAll('.sortable-col').forEach(col => {
+      new Sortable(col, {
+        group: 'kanban',
+        animation: 150,
+        onEnd: function (evt) {
+          const itemEl = evt.item; 
+          const prospectoId = itemEl.getAttribute('data-id');
+          const nuevaEtapa = evt.to.getAttribute('data-etapa');
+          
+          if (evt.from !== evt.to) {
+            htmx.ajax('POST', `/prospectos/${prospectoId}/etapa`, {
+              values: { etapa: nuevaEtapa },
+              swap: 'none'
+            });
+          }
+        }
+      });
+    });
+  </script
+</body>
+</html>

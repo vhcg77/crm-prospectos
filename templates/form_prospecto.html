@@ -1,0 +1,54 @@
+<div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+    <h2 class="text-xl font-bold mb-4">{% if prospecto %}Editar Prospecto{% else %}Nuevo Prospecto{% endif %}</h2>
+    <form hx-post="{% if prospecto %}/prospectos/{{ prospecto.id }}/editar{% else %}/prospectos{% endif %}"
+          hx-target="body" hx-swap="outerHTML">
+      
+      <div class="mb-3">
+        <label class="block text-sm font-medium">Nombre *</label>
+        <input type="text" name="nombre" value="{{ prospecto.nombre if prospecto else '' }}" required class="border rounded w-full p-2">
+      </div>
+      
+      <div class="mb-3">
+        <label class="block text-sm font-medium">Empresa</label>
+        <input type="text" name="empresa" value="{{ prospecto.empresa if prospecto else '' }}" class="border rounded w-full p-2">
+      </div>
+      
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label class="block text-sm font-medium">Email</label>
+          <input type="email" name="email" value="{{ prospecto.email if prospecto else '' }}" class="border rounded w-full p-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Teléfono</label>
+          <input type="text" name="telefono" value="{{ prospecto.telefono if prospecto else '' }}" class="border rounded w-full p-2">
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label class="block text-sm font-medium">Valor Estimado</label>
+          <input type="number" name="valor_estimado" value="{{ prospecto.valor_estimado if prospecto else 0 }}" class="border rounded w-full p-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Etapa</label>
+          <select name="etapa" class="border rounded w-full p-2">
+            {% for e in etapas %}
+            <option value="{{ e }}" {% if prospecto and prospecto.etapa == e %}selected{% endif %}>{{ e }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-medium">Notas</label>
+        <textarea name="notas" rows="3" class="border rounded w-full p-2">{{ prospecto.notas if prospecto else '' }}</textarea>
+      </div>
+      
+      <div class="flex justify-end space-x-2">
+        <button type="button" onclick="document.getElementById('modal-container').remove()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>

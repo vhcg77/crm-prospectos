@@ -1,0 +1,8 @@
+# Dependencias de DESARROLLO. No empaquetar en el binario.
+-r requirements.txt
+pytest>=8.0
+httpx>=0.27          # requerido por TestClient de FastAPI
+faker>=30.0
+pyinstaller>=6.0
+black>=24.0
+ruff>=0.6

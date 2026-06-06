@@ -1,0 +1,67 @@
+import pytest
+from models import Prospecto, Actividad, ETAPAS
+
+def test_crear_prospecto(client):
+    data = {
+        "nombre": "Juan Perez",
+        "empresa": "Acme Corp",
+        "telefono": "12345678",
+        "email": "juan@acme.com",
+        "valor_estimado": 500000,
+        "notas": "Nota inicial"
+    }
+    response = client.post("/prospectos", data=data)
+    assert response.status_code == 200
+    # Como HTMX nos devuelve HTML para insertar, podemos buscar que el nombre esté en la respuesta
+    assert "Juan Perez" in response.text
+    
+    # Verificar en DB
+    prospecto_db = client.app.dependency_overrides.get("get_db") # Este override de conftest es local al endpoint, verifiquemos llamando un endpoint getter
+    # O mejor: solo probamos endpoints
+    resp_get = client.get("/")
+    assert "Juan Perez" in resp_get.text
+
+def test_actualizar_prospecto(client, db_session):
+    p = Prospecto(nombre="Test Update", etapa=ETAPAS[0])
+    db_session.add(p)
+    db_session.commit()
+    
+    data = {
+        "nombre": "Nombre Actualizado",
+        "empresa": "Tech LLC"
+    }
+    response = client.post(f"/prospectos/{p.id}/editar", data=data)
+    assert response.status_code == 200
+    assert "Nombre Actualizado" in response.text
+
+def test_cambiar_etapa_kanban(client, db_session):
+    p = Prospecto(nombre="Test Kanban", etapa=ETAPAS[0])
+    db_session.add(p)
+    db_session.commit()
+    
+    # SortableJS envía el item arrastrado (podría ser via form data)
+    # Imaginemos que HTMX manda 'etapa' nueva.
+    data = {"etapa": ETAPAS[1]}
+    response = client.post(f"/prospectos/{p.id}/etapa", data=data)
+    assert response.status_code == 200
+    
+    # Refrescamos la sesion
+    db_session.refresh(p)
+    assert p.etapa == ETAPAS[1]
+
+def test_crear_actividad(client, db_session):
+    p = Prospecto(nombre="Test Actividad", etapa=ETAPAS[0])
+    db_session.add(p)
+    db_session.commit()
+    
+    data = {
+        "tipo": "Llamada",
+        "descripcion": "No contestó."
+    }
+    response = client.post(f"/prospectos/{p.id}/actividades", data=data)
+    assert response.status_code == 200
+    assert "No contestó." in response.text
+    
+    actividades = db_session.query(Actividad).filter_by(prospecto_id=p.id).all()
+    assert len(actividades) == 1
+    assert actividades[0].tipo == "Llamada"
