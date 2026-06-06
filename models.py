@@ -29,7 +29,7 @@ class Actividad(Base):
     __tablename__ = "actividades"
 
     id = Column(Integer, primary_key=True, index=True)
-    prospecto_id = Column(Integer, ForeignKey("prospectos.id"), nullable=False)
+    prospecto_id = Column(Integer, ForeignKey("prospectos.id", ondelete="CASCADE"), nullable=False)
     tipo = Column(String, nullable=False)  # ej: Llamada, Email, Nota, Cambio de Etapa
     descripcion = Column(Text, nullable=False)
     creado_en = Column(DateTime(timezone=True), server_default=func.now())

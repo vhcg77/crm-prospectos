@@ -1,32 +1,43 @@
-<div class="p-4 bg-white rounded shadow" id="detalle-prospecto-{{ prospecto.id }}">
-  <h2 class="text-xl font-bold mb-2">{{ prospecto.nombre }}</h2>
-  <p class="text-sm text-gray-600 mb-4">{{ prospecto.empresa }} | {{ prospecto.email }} | {{ prospecto.telefono }}</p>
-
-  <h3 class="font-semibold text-lg mb-2">Actividades</h3>
-  <ul class="mb-4 space-y-2">
-    {% for act in prospecto.actividades %}
-    <li class="p-2 bg-gray-50 rounded border border-gray-200">
-      <span class="text-xs text-gray-500">{{ act.creado_en.strftime('%Y-%m-%d %H:%M') if act.creado_en else '' }}</span>
-      <strong class="block">{{ act.tipo }}</strong>
-      <p class="text-sm">{{ act.descripcion }}</p>
-    </li>
-    {% else %}
-    <li class="text-sm text-gray-500">No hay actividades registradas.</li>
-    {% endfor %}
-  </ul>
-
-  <h4 class="font-medium mb-2">Nueva Actividad</h4>
-  <form hx-post="/prospectos/{{ prospecto.id }}/actividades" hx-target="#detalle-prospecto-{{ prospecto.id }}" hx-swap="outerHTML">
-    <div class="mb-2">
-      <select name="tipo" class="border rounded p-1 w-full text-sm">
-        <option value="Llamada">Llamada</option>
-        <option value="Email">Email</option>
-        <option value="Nota">Nota</option>
-      </select>
+<div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded shadow-lg w-full max-w-lg max-h-[90vh] flex flex-col" id="detalle-prospecto-{{ prospecto.id }}">
+    
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h2 class="text-xl font-bold">{{ prospecto.nombre }}</h2>
+        <p class="text-sm text-gray-600">{{ prospecto.empresa or 'Sin Empresa' }} | {{ prospecto.email or 'Sin Email' }}</p>
+      </div>
+      <button type="button" onclick="document.getElementById('modal-container').remove()" class="text-gray-400 hover:text-gray-800">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
     </div>
-    <div class="mb-2">
-      <textarea name="descripcion" rows="2" class="border rounded p-1 w-full text-sm" placeholder="Descripción..."></textarea>
+
+    <h3 class="font-semibold text-lg mb-2">Historial de Actividades</h3>
+    
+    <div class="flex-1 overflow-y-auto mb-4 border rounded p-2 bg-gray-50">
+      <ul class="space-y-3" id="logs-list">
+        {% for act in prospecto.actividades %}
+        <li class="p-3 bg-white rounded shadow-sm border border-gray-100">
+          <div class="flex justify-between items-baseline mb-1">
+            <strong class="text-sm text-gray-800">{{ act.tipo|capitalize }}</strong>
+            <span class="text-xs text-gray-500">{{ act.creado_en | datetime_cl if act.creado_en else '' }}</span>
+          </div>
+          <p class="text-sm text-gray-700">{{ act.descripcion }}</p>
+        </li>
+        {% else %}
+        <li class="text-sm text-gray-500 p-2">No hay actividades registradas.</li>
+        {% endfor %}
+      </ul>
     </div>
-    <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">Guardar Actividad</button>
-  </form>
+
+    <h4 class="font-medium mb-2 text-sm text-gray-700">Agregar Nota Manual</h4>
+    <form hx-post="/prospectos/{{ prospecto.id }}/logs" hx-target="#modal-container" hx-swap="outerHTML">
+      <div class="flex flex-col gap-2">
+        <textarea name="descripcion" rows="2" class="border rounded p-2 w-full text-sm" placeholder="Escribe una nota sobre este prospecto..." required></textarea>
+        <div class="flex justify-end">
+          <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-700">Guardar Nota</button>
+        </div>
+      </div>
+    </form>
+    
+  </div>
 </div>

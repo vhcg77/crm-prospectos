@@ -1,7 +1,7 @@
 import pytest
 from models import Prospecto, Actividad, ETAPAS
 
-def test_crear_prospecto(client):
+def test_crear_prospecto(client, db_session):
     data = {
         "nombre": "Juan Perez",
         "empresa": "Acme Corp",
@@ -22,6 +22,12 @@ def test_crear_prospecto(client):
     # Verificar en DB (ya que estamos)
     resp_get = client.get("/")
     assert "Juan Perez" in resp_get.text
+    
+    # Comprobar log "creado"
+    p = db_session.query(Prospecto).filter_by(nombre="Juan Perez").first()
+    actividades = db_session.query(Actividad).filter_by(prospecto_id=p.id).all()
+    assert len(actividades) == 1
+    assert actividades[0].tipo == "creado"
 
 def test_actualizar_prospecto(client, db_session):
     p = Prospecto(nombre="Test Update", etapa=ETAPAS[0])
@@ -39,6 +45,11 @@ def test_actualizar_prospecto(client, db_session):
     assert "Nombre Actualizado" in response.text
     assert 'id="modal-container"' in response.text
     assert 'hx-swap-oob="true"' in response.text
+    
+    # Comprobar log "editado"
+    actividades = db_session.query(Actividad).filter_by(prospecto_id=p.id).all()
+    assert len(actividades) == 1
+    assert actividades[0].tipo == "editado"
 
 def test_borrar_prospecto(client, db_session):
     p = Prospecto(nombre="A Borrar", etapa=ETAPAS[0])
@@ -84,19 +95,18 @@ def test_cambiar_etapa_invalida(client, db_session):
     db_session.refresh(p)
     assert p.etapa == ETAPAS[0]  # No cambió
 
-def test_crear_actividad(client, db_session):
+def test_crear_nota_log(client, db_session):
     p = Prospecto(nombre="Test Actividad", etapa=ETAPAS[0])
     db_session.add(p)
     db_session.commit()
     
     data = {
-        "tipo": "Llamada",
         "descripcion": "No contestó."
     }
-    response = client.post(f"/prospectos/{p.id}/actividades", data=data)
+    response = client.post(f"/prospectos/{p.id}/logs", data=data)
     assert response.status_code == 200
     assert "No contestó." in response.text
     
     actividades = db_session.query(Actividad).filter_by(prospecto_id=p.id).all()
     assert len(actividades) == 1
-    assert actividades[0].tipo == "Llamada"
+    assert actividades[0].tipo == "nota"

@@ -6,7 +6,7 @@
   </td>
   <td class="p-3 space-x-2">
     <button hx-get="/prospectos/{{ p.id }}/editar" hx-target="#modal-container" hx-swap="innerHTML" class="text-blue-600 hover:underline text-sm">Editar</button>
-    <button hx-get="/prospectos/{{ p.id }}/actividades" hx-target="#modal-container" hx-swap="innerHTML" class="text-emerald-600 hover:underline text-sm">Logs</button>
+    <button hx-get="/prospectos/{{ p.id }}/logs" hx-target="#modal-container" hx-swap="innerHTML" class="text-emerald-600 hover:underline text-sm">Logs</button>
     <button hx-delete="/prospectos/{{ p.id }}" hx-target="#prospecto-row-{{ p.id }}" hx-swap="outerHTML" hx-confirm="¿Borrar a {{ p.nombre }}?" class="text-red-600 hover:underline text-sm">Borrar</button>
   </td>
 </tr>

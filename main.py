@@ -8,6 +8,7 @@ import os
 import socket
 import threading
 from contextlib import asynccontextmanager
+from zoneinfo import ZoneInfo
 
 import jinja2
 import uvicorn
@@ -37,7 +38,24 @@ _jinja_env = jinja2.Environment(
     autoescape=jinja2.select_autoescape(),
     cache_size=0,  # evita el bug de cache_key no hasheable en Starlette 1.2.x
 )
+
+def format_datetime_cl(dt):
+    if not dt:
+        return ""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=ZoneInfo("UTC"))
+    local_dt = dt.astimezone(ZoneInfo("America/Santiago"))
+    meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+    mes = meses[local_dt.month - 1]
+    return f"{local_dt.day} {mes} {local_dt.year}, {local_dt.strftime('%H:%M')}"
+
+_jinja_env.filters["datetime_cl"] = format_datetime_cl
 templates = Jinja2Templates(env=_jinja_env)
+
+def registrar_actividad(db: Session, prospecto_id: int, tipo: str, descripcion: str):
+    act = Actividad(prospecto_id=prospecto_id, tipo=tipo, descripcion=descripcion)
+    db.add(act)
+    db.commit()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -104,6 +122,8 @@ def crear_prospecto(
     db.add(p)
     db.commit()
     db.refresh(p)
+    
+    registrar_actividad(db, p.id, "creado", "Prospecto creado")
     html = templates.get_template("partials/prospecto_row.html").render(p=p, color_etapa=COLOR_ETAPA)
     return HTMLResponse(html + '<div id="modal-container" hx-swap-oob="true"></div>')
 
@@ -141,6 +161,8 @@ def actualizar_prospecto(
             p.etapa = etapa
         db.commit()
         db.refresh(p)
+        
+        registrar_actividad(db, p.id, "editado", "Datos del prospecto actualizados")
         html = templates.get_template("partials/prospecto_row.html").render(p=p, color_etapa=COLOR_ETAPA)
         return HTMLResponse(html + '<div id="modal-container" hx-swap-oob="true"></div>')
     return HTMLResponse("No encontrado", status_code=404)
@@ -163,15 +185,14 @@ def cambiar_etapa(id: int, etapa: str = Form(...), db: Session = Depends(get_db)
         etapa_anterior = p.etapa
         if etapa_anterior != etapa:
             p.etapa = etapa
-            act = Actividad(prospecto_id=p.id, tipo="Cambio de Etapa", descripcion=f"Cambio de etapa: {etapa_anterior} → {etapa}")
-            db.add(act)
             db.commit()
             db.refresh(p)
+            registrar_actividad(db, p.id, "etapa", f"Cambio de etapa: {etapa_anterior} → {etapa}")
         html = templates.get_template("partials/kanban_card.html").render(p=p, color_etapa=COLOR_ETAPA)
         return HTMLResponse(html)
     return HTMLResponse("No encontrado", status_code=404)
 
-@app.get("/prospectos/{id}/actividades", response_class=HTMLResponse)
+@app.get("/prospectos/{id}/logs", response_class=HTMLResponse)
 def ver_actividades(id: int, request: Request, db: Session = Depends(get_db)):
     p = db.query(Prospecto).filter(Prospecto.id == id).first()
     return templates.TemplateResponse(
@@ -180,19 +201,22 @@ def ver_actividades(id: int, request: Request, db: Session = Depends(get_db)):
         {"prospecto": p}
     )
 
-@app.post("/prospectos/{id}/actividades")
+@app.post("/prospectos/{id}/logs")
 def crear_actividad(
     id: int,
-    tipo: str = Form(...),
+    request: Request,
     descripcion: str = Form(...),
     db: Session = Depends(get_db)
 ):
     p = db.query(Prospecto).filter(Prospecto.id == id).first()
-    if p:
-        act = Actividad(prospecto_id=p.id, tipo=tipo, descripcion=descripcion)
-        db.add(act)
-        db.commit()
-    return RedirectResponse(url=f"/prospectos/{id}/actividades", status_code=303)
+    if p and descripcion.strip():
+        registrar_actividad(db, p.id, "nota", descripcion.strip())
+    
+    return templates.TemplateResponse(
+        request,
+        "detalle_prospecto.html",
+        {"prospecto": p}
+    )
 
 # TODO (Fase 2): rutas /prospectos/{id}/ai/... usando ai_client (degradación elegante).
 @app.post("/prospectos/{id}/ai/sugerir-accion")
