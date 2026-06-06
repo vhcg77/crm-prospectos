@@ -63,6 +63,22 @@ def parse_clp(valor_str: str) -> int:
     clean = re.sub(r"[^\d]", "", str(valor_str))
     return int(clean) if clean else 0
 
+def validar_prospecto(nombre: str, email: str, telefono: str, valor_int: int, etapa: str) -> list[str]:
+    errores = []
+    if not nombre or not nombre.strip():
+        errores.append("El nombre es obligatorio.")
+    if email:
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            errores.append("El email no tiene un formato válido.")
+    if telefono:
+        if not re.match(r"^[\d\s\+\-\(\)\.]+$", telefono):
+            errores.append("El teléfono solo puede contener números, espacios y los símbolos + - ( ) .")
+    if valor_int < 0:
+        errores.append("El valor estimado no puede ser negativo.")
+    if etapa and etapa not in ETAPAS:
+        errores.append("La etapa seleccionada no es válida.")
+    return errores
+
 _jinja_env.filters["datetime_cl"] = format_datetime_cl
 _jinja_env.filters["format_clp"] = format_clp
 _jinja_env.filters["format_clp_raw"] = format_clp_raw
@@ -119,21 +135,36 @@ def form_nuevo_prospecto(request: Request):
 @app.post("/prospectos")
 def crear_prospecto(
     request: Request,
-    nombre: str = Form(...),
+    nombre: str = Form(""),
     empresa: Optional[str] = Form(None),
     telefono: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
     valor_estimado: str = Form("0"),
     notas: Optional[str] = Form(None),
+    etapa: str = Form(ETAPAS[0]),
     db: Session = Depends(get_db)
 ):
+    valor_int = parse_clp(valor_estimado)
+    errores = validar_prospecto(nombre, email, telefono, valor_int, etapa)
+    
+    if errores:
+        p = Prospecto(
+            nombre=nombre, empresa=empresa, telefono=telefono,
+            email=email, valor_estimado=valor_int, notas=notas, etapa=etapa
+        )
+        html = templates.get_template("form_prospecto.html").render(
+            {"request": request, "prospecto": p, "etapas": ETAPAS, "errores": errores}
+        )
+        return HTMLResponse(html, headers={"HX-Retarget": "#modal-container", "HX-Reswap": "innerHTML"})
+
     p = Prospecto(
         nombre=nombre,
         empresa=empresa,
         telefono=telefono,
         email=email,
-        valor_estimado=parse_clp(valor_estimado),
-        notas=notas
+        valor_estimado=valor_int,
+        notas=notas,
+        etapa=etapa
     )
     db.add(p)
     db.commit()
@@ -156,7 +187,7 @@ def form_editar_prospecto(id: int, request: Request, db: Session = Depends(get_d
 def actualizar_prospecto(
     id: int,
     request: Request,
-    nombre: str = Form(...),
+    nombre: str = Form(""),
     empresa: Optional[str] = Form(None),
     telefono: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
@@ -165,13 +196,26 @@ def actualizar_prospecto(
     etapa: str = Form(None),
     db: Session = Depends(get_db)
 ):
+    valor_int = parse_clp(valor_estimado)
+    errores = validar_prospecto(nombre, email, telefono, valor_int, etapa)
+    
+    if errores:
+        p = Prospecto(
+            id=id, nombre=nombre, empresa=empresa, telefono=telefono,
+            email=email, valor_estimado=valor_int, notas=notas, etapa=etapa
+        )
+        html = templates.get_template("form_prospecto.html").render(
+            {"request": request, "prospecto": p, "etapas": ETAPAS, "errores": errores}
+        )
+        return HTMLResponse(html, headers={"HX-Retarget": "#modal-container", "HX-Reswap": "innerHTML"})
+
     p = db.query(Prospecto).filter(Prospecto.id == id).first()
     if p:
         p.nombre = nombre
         p.empresa = empresa
         p.telefono = telefono
         p.email = email
-        p.valor_estimado = parse_clp(valor_estimado)
+        p.valor_estimado = valor_int
         p.notas = notas
         if etapa:
             p.etapa = etapa

@@ -1,8 +1,19 @@
 <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
   <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
-    <h2 class="text-xl font-bold mb-4">{% if prospecto %}Editar Prospecto{% else %}Nuevo Prospecto{% endif %}</h2>
+    <h2 class="text-xl font-bold mb-4">{% if prospecto and prospecto.id %}Editar Prospecto{% else %}Nuevo Prospecto{% endif %}</h2>
+    
+    {% if errores %}
+    <div class="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-200">
+      <ul class="list-disc list-inside text-sm">
+        {% for error in errores %}
+        <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
     <form 
-      {% if prospecto %}
+      {% if prospecto and prospecto.id %}
         hx-put="/prospectos/{{ prospecto.id }}" hx-target="#prospecto-row-{{ prospecto.id }}" hx-swap="outerHTML"
       {% else %}
         hx-post="/prospectos" hx-target="#prospectos-list" hx-swap="afterbegin"
@@ -25,7 +36,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium">Teléfono</label>
-          <input type="text" name="telefono" value="{{ prospecto.telefono if prospecto else '' }}" class="border rounded w-full p-2">
+          <input type="text" name="telefono" value="{{ prospecto.telefono if prospecto else '' }}" pattern="^[\d\s\+\-\(\)\.]+$" title="Solo números, espacios y símbolos +-()." class="border rounded w-full p-2">
         </div>
       </div>
       

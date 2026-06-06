@@ -102,3 +102,35 @@ def test_crear_nota_log(client, db_session):
     actividades = db_session.query(Actividad).filter_by(prospecto_id=p.id).all()
     assert len(actividades) == 1
     assert actividades[0].tipo == "nota"
+
+def test_validacion_crear_sin_nombre(client, db_session):
+    data = {
+        "nombre": "   ",
+        "email": "test@test.com",
+        "etapa": ETAPAS[0]
+    }
+    response = client.post("/prospectos", data=data)
+    assert response.status_code == 200
+    assert "El nombre es obligatorio." in response.text
+    assert response.headers.get("hx-retarget") == "#modal-container"
+    
+    prospectos = db_session.query(Prospecto).all()
+    assert len(prospectos) == 0
+
+def test_validacion_editar_email_invalido(client, db_session):
+    p = Prospecto(nombre="Test Email", email="viejo@test.com", etapa=ETAPAS[0])
+    db_session.add(p)
+    db_session.commit()
+    
+    data = {
+        "nombre": "Test Email",
+        "email": "correo_sin_arroba",
+        "etapa": ETAPAS[0]
+    }
+    response = client.put(f"/prospectos/{p.id}", data=data)
+    assert response.status_code == 200
+    assert "El email no tiene un formato válido." in response.text
+    assert response.headers.get("hx-retarget") == "#modal-container"
+    
+    db_session.refresh(p)
+    assert p.email == "viejo@test.com"
