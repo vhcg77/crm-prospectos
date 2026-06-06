@@ -58,15 +58,31 @@ def test_cambiar_etapa_kanban(client, db_session):
     db_session.add(p)
     db_session.commit()
     
-    # SortableJS envía el item arrastrado (podría ser via form data)
-    # Imaginemos que HTMX manda 'etapa' nueva.
     data = {"etapa": ETAPAS[1]}
     response = client.post(f"/prospectos/{p.id}/etapa", data=data)
     assert response.status_code == 200
+    assert 'id="kanban-card-' in response.text
     
     # Refrescamos la sesion
     db_session.refresh(p)
     assert p.etapa == ETAPAS[1]
+    
+    # Comprobar log
+    actividades = db_session.query(Actividad).filter_by(prospecto_id=p.id).all()
+    assert len(actividades) == 1
+    assert actividades[0].descripcion == f"Cambio de etapa: {ETAPAS[0]} → {ETAPAS[1]}"
+
+def test_cambiar_etapa_invalida(client, db_session):
+    p = Prospecto(nombre="Test Kanban Error", etapa=ETAPAS[0])
+    db_session.add(p)
+    db_session.commit()
+    
+    data = {"etapa": "Etapa Invalida 123"}
+    response = client.post(f"/prospectos/{p.id}/etapa", data=data)
+    assert response.status_code == 400
+    
+    db_session.refresh(p)
+    assert p.etapa == ETAPAS[0]  # No cambió
 
 def test_crear_actividad(client, db_session):
     p = Prospecto(nombre="Test Actividad", etapa=ETAPAS[0])

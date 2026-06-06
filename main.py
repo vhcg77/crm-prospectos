@@ -155,13 +155,21 @@ def borrar_prospecto(id: int, db: Session = Depends(get_db)):
 
 @app.post("/prospectos/{id}/etapa")
 def cambiar_etapa(id: int, etapa: str = Form(...), db: Session = Depends(get_db)):
+    if etapa not in ETAPAS:
+        return HTMLResponse("Etapa inválida", status_code=400)
+        
     p = db.query(Prospecto).filter(Prospecto.id == id).first()
     if p:
-        p.etapa = etapa
-        act = Actividad(prospecto_id=p.id, tipo="Cambio de Etapa", descripcion=f"Movido a {etapa}")
-        db.add(act)
-        db.commit()
-    return HTMLResponse("OK")
+        etapa_anterior = p.etapa
+        if etapa_anterior != etapa:
+            p.etapa = etapa
+            act = Actividad(prospecto_id=p.id, tipo="Cambio de Etapa", descripcion=f"Cambio de etapa: {etapa_anterior} → {etapa}")
+            db.add(act)
+            db.commit()
+            db.refresh(p)
+        html = templates.get_template("partials/kanban_card.html").render(p=p, color_etapa=COLOR_ETAPA)
+        return HTMLResponse(html)
+    return HTMLResponse("No encontrado", status_code=404)
 
 @app.get("/prospectos/{id}/actividades", response_class=HTMLResponse)
 def ver_actividades(id: int, request: Request, db: Session = Depends(get_db)):

@@ -20,11 +20,7 @@
         
         <div class="min-h-[300px] flex flex-col gap-2 sortable-col" data-etapa="{{ etapa }}">
           {% for p in columnas[etapa] %}
-          <div class="bg-white p-3 rounded shadow cursor-grab border-l-4 border-{{ color_etapa[etapa] }}-500" data-id="{{ p.id }}">
-            <div class="font-medium text-sm">{{ p.nombre }}</div>
-            <div class="text-xs text-gray-500">{{ p.empresa or '-' }}</div>
-            <div class="text-xs text-gray-400 mt-1">${{ "{:,}".format(p.valor_estimado) }} CLP</div>
-          </div>
+          {% include 'partials/kanban_card.html' %}
           {% endfor %}
         </div>
       </div>
@@ -34,6 +30,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   <script>
+    document.body.addEventListener('htmx:responseError', function(evt) {
+      if (evt.detail.requestConfig.path.includes('/etapa')) {
+        // En caso de error (ej. etapa inválida 400), recargamos para revertir visualmente al estado real del servidor
+        window.location.reload();
+      }
+    });
+
     document.querySelectorAll('.sortable-col').forEach(col => {
       new Sortable(col, {
         group: 'kanban',
@@ -46,12 +49,13 @@
           if (evt.from !== evt.to) {
             htmx.ajax('POST', `/prospectos/${prospectoId}/etapa`, {
               values: { etapa: nuevaEtapa },
-              swap: 'none'
+              target: itemEl,
+              swap: 'outerHTML'
             });
           }
         }
       });
     });
-  </script
+  </script>
 </body>
 </html>
