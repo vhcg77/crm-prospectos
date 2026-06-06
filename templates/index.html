@@ -12,7 +12,7 @@
       <h1 class="text-2xl font-bold">{{ app_name }}</h1>
       <div>
         <a href="/kanban" class="mr-4 text-blue-600 hover:underline">Vista Kanban</a>
-        <button hx-get="/prospectos/nuevo" hx-target="body" hx-swap="beforeend" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Nuevo Prospecto</button>
+        <button hx-get="/prospectos/nuevo" hx-target="#modal-container" hx-swap="innerHTML" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Nuevo Prospecto</button>
       </div>
     </div>
     
@@ -28,18 +28,7 @@
       </thead>
       <tbody id="prospectos-list">
         {% for p in prospectos %}
-        <tr class="border-b hover:bg-gray-50" id="prospecto-row-{{ p.id }}">
-          <td class="p-3 font-medium">{{ p.nombre }}</td>
-          <td class="p-3">{{ p.empresa or '-' }}</td>
-          <td class="p-3">
-            <span class="px-2 py-1 bg-{{ color_etapa[p.etapa] }}-100 text-{{ color_etapa[p.etapa] }}-800 rounded text-sm">{{ p.etapa }}</span>
-          </td>
-          <td class="p-3 space-x-2">
-            <button hx-get="/prospectos/{{ p.id }}/editar" hx-target="body" hx-swap="beforeend" class="text-blue-600 hover:underline text-sm">Editar</button>
-            <button hx-get="/prospectos/{{ p.id }}/actividades" hx-target="body" hx-swap="beforeend" class="text-emerald-600 hover:underline text-sm">Logs</button>
-            <button hx-delete="/prospectos/{{ p.id }}" hx-target="#prospecto-row-{{ p.id }}" hx-swap="outerHTML" hx-confirm="¿Seguro que quieres borrarlo?" class="text-red-600 hover:underline text-sm">Borrar</button>
-          </td>
-        </tr>
+        {% include 'partials/prospecto_row.html' %}
         {% endfor %}
       </tbody>
     </table>
@@ -47,5 +36,6 @@
     <p class="text-slate-500">Aún no tienes prospectos. Agrega el primero 👇</p>
     {% endif %}
   </div>
+  <div id="modal-container"></div>
 </body>
 </html>

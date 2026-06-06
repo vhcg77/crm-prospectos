@@ -1,9 +1,13 @@
 <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
   <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
     <h2 class="text-xl font-bold mb-4">{% if prospecto %}Editar Prospecto{% else %}Nuevo Prospecto{% endif %}</h2>
-    <form hx-post="{% if prospecto %}/prospectos/{{ prospecto.id }}/editar{% else %}/prospectos{% endif %}"
-          hx-target="body" hx-swap="outerHTML">
-      
+    <form 
+      {% if prospecto %}
+        hx-put="/prospectos/{{ prospecto.id }}" hx-target="#prospecto-row-{{ prospecto.id }}" hx-swap="outerHTML"
+      {% else %}
+        hx-post="/prospectos" hx-target="#prospectos-list" hx-swap="afterbegin"
+      {% endif %}>
+
       <div class="mb-3">
         <label class="block text-sm font-medium">Nombre *</label>
         <input type="text" name="nombre" value="{{ prospecto.nombre if prospecto else '' }}" required class="border rounded w-full p-2">

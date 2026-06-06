@@ -103,7 +103,9 @@ def crear_prospecto(
     )
     db.add(p)
     db.commit()
-    return RedirectResponse(url="/", status_code=303)
+    db.refresh(p)
+    html = templates.get_template("partials/prospecto_row.html").render(p=p, color_etapa=COLOR_ETAPA)
+    return HTMLResponse(html + '<div id="modal-container" hx-swap-oob="true"></div>')
 
 @app.get("/prospectos/{id}/editar", response_class=HTMLResponse)
 def form_editar_prospecto(id: int, request: Request, db: Session = Depends(get_db)):
@@ -114,7 +116,7 @@ def form_editar_prospecto(id: int, request: Request, db: Session = Depends(get_d
         {"prospecto": p, "etapas": ETAPAS}
     )
 
-@app.post("/prospectos/{id}/editar")
+@app.put("/prospectos/{id}")
 def actualizar_prospecto(
     id: int,
     request: Request,
@@ -138,7 +140,10 @@ def actualizar_prospecto(
         if etapa:
             p.etapa = etapa
         db.commit()
-    return RedirectResponse(url="/", status_code=303)
+        db.refresh(p)
+        html = templates.get_template("partials/prospecto_row.html").render(p=p, color_etapa=COLOR_ETAPA)
+        return HTMLResponse(html + '<div id="modal-container" hx-swap-oob="true"></div>')
+    return HTMLResponse("No encontrado", status_code=404)
 
 @app.delete("/prospectos/{id}")
 def borrar_prospecto(id: int, db: Session = Depends(get_db)):

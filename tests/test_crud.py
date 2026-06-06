@@ -8,16 +8,18 @@ def test_crear_prospecto(client):
         "telefono": "12345678",
         "email": "juan@acme.com",
         "valor_estimado": 500000,
-        "notas": "Nota inicial"
+        "notas": "Nota inicial",
+        "etapa": ETAPAS[0]
     }
     response = client.post("/prospectos", data=data)
     assert response.status_code == 200
     # Como HTMX nos devuelve HTML para insertar, podemos buscar que el nombre esté en la respuesta
     assert "Juan Perez" in response.text
+    # También debemos validar que se devuelva el OOB del modal para cerrarlo
+    assert 'id="modal-container"' in response.text
+    assert 'hx-swap-oob="true"' in response.text
     
-    # Verificar en DB
-    prospecto_db = client.app.dependency_overrides.get("get_db") # Este override de conftest es local al endpoint, verifiquemos llamando un endpoint getter
-    # O mejor: solo probamos endpoints
+    # Verificar en DB (ya que estamos)
     resp_get = client.get("/")
     assert "Juan Perez" in resp_get.text
 
@@ -28,11 +30,28 @@ def test_actualizar_prospecto(client, db_session):
     
     data = {
         "nombre": "Nombre Actualizado",
-        "empresa": "Tech LLC"
+        "empresa": "Tech LLC",
+        "etapa": ETAPAS[1]
     }
-    response = client.post(f"/prospectos/{p.id}/editar", data=data)
+    # Ahora usamos PUT según el plan RESTful para HTMX
+    response = client.put(f"/prospectos/{p.id}", data=data)
     assert response.status_code == 200
     assert "Nombre Actualizado" in response.text
+    assert 'id="modal-container"' in response.text
+    assert 'hx-swap-oob="true"' in response.text
+
+def test_borrar_prospecto(client, db_session):
+    p = Prospecto(nombre="A Borrar", etapa=ETAPAS[0])
+    db_session.add(p)
+    db_session.commit()
+    
+    response = client.delete(f"/prospectos/{p.id}")
+    assert response.status_code == 200
+    assert response.text == ""  # Elimina del DOM
+    
+    # Validar que ya no existe en la DB a través de la lista
+    resp_get = client.get("/")
+    assert "A Borrar" not in resp_get.text
 
 def test_cambiar_etapa_kanban(client, db_session):
     p = Prospecto(nombre="Test Kanban", etapa=ETAPAS[0])
