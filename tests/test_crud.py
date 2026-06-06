@@ -134,3 +134,32 @@ def test_validacion_editar_email_invalido(client, db_session):
     
     db_session.refresh(p)
     assert p.email == "viejo@test.com"
+
+def test_buscar_prospectos(client, db_session):
+    p1 = Prospecto(nombre="Juan Rojas", empresa="Rojas LLC", etapa=ETAPAS[0])
+    p2 = Prospecto(nombre="Maria", empresa="Otra", etapa=ETAPAS[1])
+    db_session.add_all([p1, p2])
+    db_session.commit()
+    
+    # Test búsqueda por texto
+    response = client.get("/prospectos/buscar?q=rojas")
+    assert response.status_code == 200
+    assert "Juan Rojas" in response.text
+    assert "Maria" not in response.text
+    
+    # Test búsqueda por empresa
+    response = client.get("/prospectos/buscar?q=otra")
+    assert response.status_code == 200
+    assert "Maria" in response.text
+    assert "Juan Rojas" not in response.text
+    
+    # Test filtro por etapa
+    response = client.get(f"/prospectos/buscar?etapa={ETAPAS[1]}")
+    assert response.status_code == 200
+    assert "Maria" in response.text
+    assert "Juan Rojas" not in response.text
+    
+    # Test sin resultados
+    response = client.get("/prospectos/buscar?q=inexistente")
+    assert response.status_code == 200
+    assert "No se encontraron prospectos" in response.text

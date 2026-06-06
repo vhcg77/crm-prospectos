@@ -20,6 +20,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from config import APP_NAME, ENV, STATIC_DIR, TEMPLATES_DIR
 from database import get_db, init_db
@@ -102,6 +103,22 @@ def index(request: Request, db: Session = Depends(get_db)):
             "color_etapa": COLOR_ETAPA,
             "app_name": APP_NAME,
         },
+    )
+
+@app.get("/prospectos/buscar", response_class=HTMLResponse)
+def buscar_prospectos(request: Request, q: str = "", etapa: str = "", db: Session = Depends(get_db)):
+    query = db.query(Prospecto)
+    if q:
+        search = f"%{q}%"
+        query = query.filter(or_(Prospecto.nombre.ilike(search), Prospecto.empresa.ilike(search)))
+    if etapa:
+        query = query.filter(Prospecto.etapa == etapa)
+    
+    prospectos = query.order_by(Prospecto.actualizado_en.desc()).all()
+    return templates.TemplateResponse(
+        request,
+        "partials/prospectos_tbody.html",
+        {"prospectos": prospectos, "color_etapa": COLOR_ETAPA}
     )
 
 
