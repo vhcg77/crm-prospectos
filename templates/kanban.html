@@ -10,9 +10,15 @@
   <div class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Kanban — {{ app_name }}</h1>
-      <a href="/" class="text-blue-600 hover:underline">&larr; Volver a lista</a>
+      <div>
+        <a href="/" class="mr-4 text-blue-600 hover:underline">Vista Lista</a>
+        <button hx-get="/configuracion" hx-target="#modal-container" hx-swap="innerHTML" class="mr-2 border border-gray-300 bg-white text-gray-700 px-3 py-2 rounded hover:bg-gray-50">⚙️ Configuración IA</button>
+        <button hx-get="/prospectos/nuevo" hx-target="#modal-container" hx-swap="innerHTML" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Nuevo Prospecto</button>
+      </div>
     </div>
     
+    <div id="modal-container"></div>
+
     <div class="grid grid-cols-5 gap-4">
       {% for etapa in etapas %}
       <div class="bg-gray-200 rounded-lg p-3">

@@ -12,6 +12,7 @@
       <h1 class="text-2xl font-bold">{{ app_name }}</h1>
       <div>
         <a href="/kanban" class="mr-4 text-blue-600 hover:underline">Vista Kanban</a>
+        <button hx-get="/configuracion" hx-target="#modal-container" hx-swap="innerHTML" class="mr-2 border border-gray-300 bg-white text-gray-700 px-3 py-2 rounded hover:bg-gray-50">⚙️ Configuración IA</button>
         <button hx-get="/prospectos/nuevo" hx-target="#modal-container" hx-swap="innerHTML" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Nuevo Prospecto</button>
       </div>
     </div>

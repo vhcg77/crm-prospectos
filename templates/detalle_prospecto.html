@@ -11,6 +11,17 @@
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
     </div>
+    
+    <div class="flex gap-2 mb-4">
+      <button {% if not tiene_ia %}disabled title="Configura tu API key para usar IA"{% endif %} 
+              class="bg-purple-100 text-purple-800 border border-purple-200 px-3 py-1.5 rounded text-sm font-medium hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+        ✨ Sugerir próximo paso
+      </button>
+      <button {% if not tiene_ia %}disabled title="Configura tu API key para usar IA"{% endif %} 
+              class="bg-purple-100 text-purple-800 border border-purple-200 px-3 py-1.5 rounded text-sm font-medium hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
+        ✉️ Redactar email
+      </button>
+    </div>
 
     <h3 class="font-semibold text-lg mb-2">Historial de Actividades</h3>
     

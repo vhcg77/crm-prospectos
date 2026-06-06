@@ -1,0 +1,37 @@
+<div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">Configuración de IA</h2>
+      <button type="button" onclick="document.getElementById('modal-container').remove()" class="text-gray-400 hover:text-gray-800">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    
+    {% if mensaje %}
+    <div class="bg-emerald-100 text-emerald-800 p-3 rounded mb-4 text-sm">{{ mensaje }}</div>
+    {% endif %}
+    {% if error %}
+    <div class="bg-rose-100 text-rose-800 p-3 rounded mb-4 text-sm">{{ error }}</div>
+    {% endif %}
+
+    <form hx-post="/configuracion" hx-target="#modal-container" hx-swap="outerHTML">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Anthropic API Key</label>
+        <input type="password" name="api_key" placeholder="sk-ant-api03-..." required 
+               class="w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500">
+        <p class="text-xs text-gray-500 mt-1">
+          {% if tiene_ia %}
+          <span class="text-emerald-600 font-semibold">Ya existe una key configurada.</span> Ingresa una nueva si quieres cambiarla.
+          {% else %}
+          La key se guardará localmente en tu equipo. No se sincroniza ni se guarda en la base de datos.
+          {% endif %}
+        </p>
+      </div>
+      
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="document.getElementById('modal-container').remove()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cerrar</button>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Probar y Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>

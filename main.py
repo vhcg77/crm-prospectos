@@ -22,9 +22,10 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
-from config import APP_NAME, ENV, STATIC_DIR, TEMPLATES_DIR
+from config import APP_NAME, ENV, STATIC_DIR, TEMPLATES_DIR, API_KEY_PATH
 from database import get_db, init_db
 from models import COLOR_ETAPA, ETAPAS, Prospecto, Actividad
+from ai_client import tiene_api_key, test_conexion
 
 
 @asynccontextmanager
@@ -286,7 +287,7 @@ def ver_actividades(id: int, request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         request,
         "detalle_prospecto.html",
-        {"prospecto": p}
+        {"prospecto": p, "tiene_ia": tiene_api_key()}
     )
 
 @app.post("/prospectos/{id}/logs")
@@ -303,7 +304,7 @@ def crear_actividad(
     return templates.TemplateResponse(
         request,
         "detalle_prospecto.html",
-        {"prospecto": p}
+        {"prospecto": p, "tiene_ia": tiene_api_key()}
     )
 
 # TODO (Fase 2): rutas /prospectos/{id}/ai/... usando ai_client (degradación elegante).
@@ -314,6 +315,31 @@ def ai_sugerir_accion(id: int):
 @app.post("/prospectos/{id}/ai/redactar-email")
 def ai_redactar_email(id: int):
     return HTMLResponse("Borrador generado por IA...")
+
+@app.get("/configuracion", response_class=HTMLResponse)
+def get_configuracion(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "config_modal.html",
+        {"tiene_ia": tiene_api_key()}
+    )
+
+@app.post("/configuracion", response_class=HTMLResponse)
+def post_configuracion(request: Request, api_key: str = Form(...)):
+    key = api_key.strip()
+    if test_conexion(key):
+        API_KEY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        API_KEY_PATH.write_text(key)
+        return templates.TemplateResponse(
+            request,
+            "config_modal.html",
+            {"tiene_ia": True, "mensaje": "✅ Conexión exitosa. API key guardada correctamente."}
+        )
+    return templates.TemplateResponse(
+        request,
+        "config_modal.html",
+        {"tiene_ia": tiene_api_key(), "error": "❌ La key es inválida o no hay conexión."}
+    )
 
 
 def _puerto_libre() -> int:

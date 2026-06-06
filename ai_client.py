@@ -21,7 +21,40 @@ def _obtener_api_key() -> str | None:
     Fase 2 (local): leer de variable de entorno o de config del usuario.
     Fase 3 (proxy): esta función desaparece; _llamar_claude apunta a una URL del dev.
     """
-    return os.getenv("ANTHROPIC_API_KEY")
+    key = os.getenv("ANTHROPIC_API_KEY")
+    if key:
+        return key.strip()
+        
+    from config import API_KEY_PATH
+    try:
+        if API_KEY_PATH.exists():
+            content = API_KEY_PATH.read_text().strip()
+            if content:
+                return content
+    except Exception:
+        pass
+    return None
+
+def tiene_api_key() -> bool:
+    """Comprueba si hay una key configurada (útil para la UI)."""
+    return bool(_obtener_api_key())
+
+def test_conexion(api_key: str) -> bool:
+    """Valida que la key funcione con una llamada mínima."""
+    if not api_key:
+        return False
+    try:
+        from anthropic import Anthropic
+        client = Anthropic(api_key=api_key)
+        client.messages.create(
+            model=_MODELO,
+            max_tokens=1,
+            messages=[{"role": "user", "content": "Hola"}],
+            timeout=10,
+        )
+        return True
+    except Exception:
+        return False
 
 
 def _llamar_claude(system: str, user: str) -> str:

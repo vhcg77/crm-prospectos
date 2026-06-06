@@ -44,11 +44,14 @@ if ENV == "development":
     DATA_DIR = Path(__file__).parent / "data"
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     DATABASE_URL = f"sqlite:///{DATA_DIR / 'crm_dev.db'}"
+    API_KEY_PATH = DATA_DIR / "api_key.txt"
 elif ENV == "testing":
     # El fixture de pytest fija una DB in-memory; este valor es solo fallback.
     DATABASE_URL = "sqlite:///:memory:"
+    API_KEY_PATH = Path(__file__).parent / "data" / "api_key_test.txt"
 else:  # production
     DATABASE_URL = f"sqlite:///{user_data_dir() / 'crm_prod.db'}"
+    API_KEY_PATH = user_data_dir() / "api_key.txt"
 
 # Directorios de recursos (funcionan en dev y empaquetado)
 TEMPLATES_DIR = resource_path("templates")
