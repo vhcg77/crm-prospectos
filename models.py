@@ -63,7 +63,28 @@ class Prospecto(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    actividades = relationship("Actividad", back_populates="prospecto", cascade="all, delete-orphan", order_by="desc(Actividad.creado_en)")
+    actividades = relationship("Actividad", back_populates="prospecto", cascade="all, delete-orphan", order_by="desc(Actividad.creado_en)", lazy="selectin")
+
+    @property
+    def dias_sin_actividad(self) -> int:
+        from datetime import datetime, timezone
+        last_date = self.creado_en
+        if self.actividades:
+            last_date = max([act.creado_en for act in self.actividades])
+            
+        now = datetime.now(timezone.utc)
+        if last_date.tzinfo is None:
+            last_date = last_date.replace(tzinfo=timezone.utc)
+            
+        return (now - last_date).days
+
+    @property
+    def esta_estancado(self) -> bool:
+        from config import DIAS_ESTANCADO
+        # Si la etapa es Cerrado o Perdido, no se considera estancado
+        if self.etapa in [ETAPAS[3], ETAPAS[4]]:
+            return False
+        return self.dias_sin_actividad >= DIAS_ESTANCADO
 
     def to_dict(self) -> dict:
         """Representación liviana para pasar a la IA o serializar."""

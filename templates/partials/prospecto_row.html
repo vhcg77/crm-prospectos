@@ -1,5 +1,10 @@
 <tr class="border-b hover:bg-gray-50" id="prospecto-row-{{ p.id }}">
-  <td class="p-3 font-medium">{{ p.nombre }}</td>
+  <td class="p-3 font-medium">
+    {{ p.nombre }}
+    {% if p.esta_estancado %}
+    <span class="ml-2 bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-0.5 rounded" title="Sin actividad por {{ p.dias_sin_actividad }} días">Estancado</span>
+    {% endif %}
+  </td>
   <td class="p-3">{{ p.empresa or '-' }}</td>
   <td class="p-3 text-gray-700 font-medium">{{ p.valor_estimado | format_clp }}</td>
   <td class="p-3">

@@ -181,3 +181,34 @@ def test_kanban_metricas_encabezado(client, db_session):
     response_post = client.post(f"/prospectos/{p1.id}/etapa", data={"etapa": ETAPAS[1]})
     assert response_post.status_code == 200
     assert response_post.headers.get("hx-trigger") == "etapaCambiada"
+
+def test_indicador_estancado(client, db_session):
+    from datetime import datetime, timezone, timedelta
+    from config import DIAS_ESTANCADO
+    now = datetime.now(timezone.utc)
+    
+    # Prospecto estancado (creado hace 15 días, sin actividad)
+    p_estancado = Prospecto(nombre="Estancado", etapa=ETAPAS[0])
+    p_estancado.creado_en = now - timedelta(days=DIAS_ESTANCADO + 1)
+    
+    # Prospecto no estancado (creado hoy)
+    p_fresco = Prospecto(nombre="Fresco", etapa=ETAPAS[0])
+    p_fresco.creado_en = now
+    
+    # Prospecto en etapa terminal (hace 20 días, pero está cerrado)
+    p_cerrado = Prospecto(nombre="Cerrado Viejo", etapa=ETAPAS[3])
+    p_cerrado.creado_en = now - timedelta(days=20)
+    
+    db_session.add_all([p_estancado, p_fresco, p_cerrado])
+    db_session.commit()
+    
+    # Comprobar lista
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "Estancado</span>" in response.text  # el badge
+    
+    # Comprobar Kanban
+    response_kanban = client.get("/kanban")
+    assert response_kanban.status_code == 200
+    # Al menos un warning de estancado
+    assert "⚠️" in response_kanban.text

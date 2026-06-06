@@ -55,3 +55,4 @@ TEMPLATES_DIR = resource_path("templates")
 STATIC_DIR = resource_path("static")
 
 APP_NAME = "CRM de Prospección"
+DIAS_ESTANCADO = 14

@@ -1,5 +1,8 @@
-<div class="bg-white p-3 rounded shadow cursor-grab border-l-4 border-{{ color_etapa[p.etapa] }}-500" data-id="{{ p.id }}" id="kanban-card-{{ p.id }}">
-  <div class="font-medium text-sm">{{ p.nombre }}</div>
+<div class="bg-white p-3 rounded shadow cursor-grab border-l-4 border-{{ color_etapa[p.etapa] }}-500 {% if p.esta_estancado %} border-y-2 border-r-2 border-amber-400 {% endif %}" data-id="{{ p.id }}" id="kanban-card-{{ p.id }}">
+  <div class="font-medium text-sm flex justify-between">
+    <span>{{ p.nombre }}</span>
+    {% if p.esta_estancado %}<span title="Estancado por {{ p.dias_sin_actividad }} días">⚠️</span>{% endif %}
+  </div>
   <div class="text-xs text-gray-500">{{ p.empresa or '-' }}</div>
   <div class="text-xs text-gray-400 mt-1">{{ p.valor_estimado | format_clp }}</div>
 </div>
