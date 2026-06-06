@@ -1,6 +1,7 @@
 <tr class="border-b hover:bg-gray-50" id="prospecto-row-{{ p.id }}">
   <td class="p-3 font-medium">{{ p.nombre }}</td>
   <td class="p-3">{{ p.empresa or '-' }}</td>
+  <td class="p-3 text-gray-700 font-medium">{{ p.valor_estimado | format_clp }}</td>
   <td class="p-3">
     <span class="px-2 py-1 bg-{{ color_etapa[p.etapa] }}-100 text-{{ color_etapa[p.etapa] }}-800 rounded text-sm">{{ p.etapa }}</span>
   </td>

@@ -1,5 +1,5 @@
 <div class="bg-white p-3 rounded shadow cursor-grab border-l-4 border-{{ color_etapa[p.etapa] }}-500" data-id="{{ p.id }}" id="kanban-card-{{ p.id }}">
   <div class="font-medium text-sm">{{ p.nombre }}</div>
   <div class="text-xs text-gray-500">{{ p.empresa or '-' }}</div>
-  <div class="text-xs text-gray-400 mt-1">${{ "{:,}".format(p.valor_estimado) }} CLP</div>
+  <div class="text-xs text-gray-400 mt-1">{{ p.valor_estimado | format_clp }}</div>
 </div>

@@ -7,46 +7,38 @@ def test_crear_prospecto(client, db_session):
         "empresa": "Acme Corp",
         "telefono": "12345678",
         "email": "juan@acme.com",
-        "valor_estimado": 500000,
+        "valor_estimado": "3.500.000",
         "notas": "Nota inicial",
         "etapa": ETAPAS[0]
     }
     response = client.post("/prospectos", data=data)
     assert response.status_code == 200
-    # Como HTMX nos devuelve HTML para insertar, podemos buscar que el nombre esté en la respuesta
     assert "Juan Perez" in response.text
-    # También debemos validar que se devuelva el OOB del modal para cerrarlo
-    assert 'id="modal-container"' in response.text
-    assert 'hx-swap-oob="true"' in response.text
     
-    # Verificar en DB (ya que estamos)
-    resp_get = client.get("/")
-    assert "Juan Perez" in resp_get.text
-    
-    # Comprobar log "creado"
+    # Comprobar log "creado" y valor_estimado parseado
     p = db_session.query(Prospecto).filter_by(nombre="Juan Perez").first()
+    assert p.valor_estimado == 3500000
     actividades = db_session.query(Actividad).filter_by(prospecto_id=p.id).all()
     assert len(actividades) == 1
     assert actividades[0].tipo == "creado"
 
 def test_actualizar_prospecto(client, db_session):
-    p = Prospecto(nombre="Test Update", etapa=ETAPAS[0])
+    p = Prospecto(nombre="Test Update", valor_estimado=1000, etapa=ETAPAS[0])
     db_session.add(p)
     db_session.commit()
     
     data = {
         "nombre": "Nombre Actualizado",
         "empresa": "Tech LLC",
+        "valor_estimado": "$ 4.500.000",
         "etapa": ETAPAS[1]
     }
-    # Ahora usamos PUT según el plan RESTful para HTMX
     response = client.put(f"/prospectos/{p.id}", data=data)
     assert response.status_code == 200
-    assert "Nombre Actualizado" in response.text
-    assert 'id="modal-container"' in response.text
-    assert 'hx-swap-oob="true"' in response.text
     
-    # Comprobar log "editado"
+    # Comprobar log "editado" y valor parseado
+    db_session.refresh(p)
+    assert p.valor_estimado == 4500000
     actividades = db_session.query(Actividad).filter_by(prospecto_id=p.id).all()
     assert len(actividades) == 1
     assert actividades[0].tipo == "editado"

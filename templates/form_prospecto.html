@@ -32,7 +32,10 @@
       <div class="grid grid-cols-2 gap-3 mb-3">
         <div>
           <label class="block text-sm font-medium">Valor Estimado</label>
-          <input type="number" name="valor_estimado" value="{{ prospecto.valor_estimado if prospecto else 0 }}" class="border rounded w-full p-2">
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+            <input type="text" inputmode="numeric" name="valor_estimado" value="{{ prospecto.valor_estimado | format_clp_raw if prospecto else '0' }}" class="border rounded w-full py-2 pl-7 pr-2">
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium">Etapa</label>

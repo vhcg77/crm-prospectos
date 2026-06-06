@@ -7,6 +7,7 @@ abre una ventana pywebview nativa (sin consola, sin navegador, sin URL visible).
 import os
 import socket
 import threading
+import re
 from contextlib import asynccontextmanager
 from zoneinfo import ZoneInfo
 
@@ -49,7 +50,22 @@ def format_datetime_cl(dt):
     mes = meses[local_dt.month - 1]
     return f"{local_dt.day} {mes} {local_dt.year}, {local_dt.strftime('%H:%M')}"
 
+def format_clp(valor):
+    if not valor: return "$0"
+    return f"${valor:,}".replace(",", ".")
+
+def format_clp_raw(valor):
+    if not valor: return "0"
+    return f"{valor:,}".replace(",", ".")
+
+def parse_clp(valor_str: str) -> int:
+    if not valor_str: return 0
+    clean = re.sub(r"[^\d]", "", str(valor_str))
+    return int(clean) if clean else 0
+
 _jinja_env.filters["datetime_cl"] = format_datetime_cl
+_jinja_env.filters["format_clp"] = format_clp
+_jinja_env.filters["format_clp_raw"] = format_clp_raw
 templates = Jinja2Templates(env=_jinja_env)
 
 def registrar_actividad(db: Session, prospecto_id: int, tipo: str, descripcion: str):
@@ -107,7 +123,7 @@ def crear_prospecto(
     empresa: Optional[str] = Form(None),
     telefono: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
-    valor_estimado: int = Form(0),
+    valor_estimado: str = Form("0"),
     notas: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
@@ -116,7 +132,7 @@ def crear_prospecto(
         empresa=empresa,
         telefono=telefono,
         email=email,
-        valor_estimado=valor_estimado,
+        valor_estimado=parse_clp(valor_estimado),
         notas=notas
     )
     db.add(p)
@@ -144,7 +160,7 @@ def actualizar_prospecto(
     empresa: Optional[str] = Form(None),
     telefono: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
-    valor_estimado: int = Form(0),
+    valor_estimado: str = Form("0"),
     notas: Optional[str] = Form(None),
     etapa: str = Form(None),
     db: Session = Depends(get_db)
@@ -155,7 +171,7 @@ def actualizar_prospecto(
         p.empresa = empresa
         p.telefono = telefono
         p.email = email
-        p.valor_estimado = valor_estimado
+        p.valor_estimado = parse_clp(valor_estimado)
         p.notas = notas
         if etapa:
             p.etapa = etapa
