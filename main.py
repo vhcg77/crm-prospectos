@@ -122,6 +122,17 @@ def buscar_prospectos(request: Request, q: str = "", etapa: str = "", db: Sessio
     )
 
 
+@app.get("/kanban/columna/{etapa}", response_class=HTMLResponse)
+def kanban_col_header(etapa: str, request: Request, db: Session = Depends(get_db)):
+    if etapa not in ETAPAS:
+        return HTMLResponse("", status_code=400)
+    prospectos = db.query(Prospecto).filter(Prospecto.etapa == etapa).all()
+    return templates.TemplateResponse(
+        request,
+        "partials/kanban_col_header.html",
+        {"etapa": etapa, "columnas": {etapa: prospectos}}
+    )
+
 @app.get("/kanban", response_class=HTMLResponse)
 def kanban(request: Request, db: Session = Depends(get_db)):
     columnas = {
@@ -266,7 +277,7 @@ def cambiar_etapa(id: int, etapa: str = Form(...), db: Session = Depends(get_db)
             db.refresh(p)
             registrar_actividad(db, p.id, "etapa", f"Cambio de etapa: {etapa_anterior} → {etapa}")
         html = templates.get_template("partials/kanban_card.html").render(p=p, color_etapa=COLOR_ETAPA)
-        return HTMLResponse(html)
+        return HTMLResponse(html, headers={"HX-Trigger": "etapaCambiada"})
     return HTMLResponse("No encontrado", status_code=404)
 
 @app.get("/prospectos/{id}/logs", response_class=HTMLResponse)

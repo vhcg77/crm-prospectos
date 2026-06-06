@@ -163,3 +163,21 @@ def test_buscar_prospectos(client, db_session):
     response = client.get("/prospectos/buscar?q=inexistente")
     assert response.status_code == 200
     assert "No se encontraron prospectos" in response.text
+
+def test_kanban_metricas_encabezado(client, db_session):
+    p1 = Prospecto(nombre="Test1", etapa=ETAPAS[0], valor_estimado=1500000)
+    p2 = Prospecto(nombre="Test2", etapa=ETAPAS[0], valor_estimado=500000)
+    db_session.add_all([p1, p2])
+    db_session.commit()
+    
+    # Comprobar el GET del header
+    response = client.get(f"/kanban/columna/{ETAPAS[0]}")
+    assert response.status_code == 200
+    assert ETAPAS[0] in response.text
+    assert "2" in response.text  # Conteo
+    assert "2.000.000" in response.text  # Suma
+    
+    # Comprobar el trigger del POST
+    response_post = client.post(f"/prospectos/{p1.id}/etapa", data={"etapa": ETAPAS[1]})
+    assert response_post.status_code == 200
+    assert response_post.headers.get("hx-trigger") == "etapaCambiada"

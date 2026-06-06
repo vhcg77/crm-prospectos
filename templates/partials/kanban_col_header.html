@@ -1,0 +1,4 @@
+<div id="header-{{ etapa | replace(' ', '-') }}" class="mb-3" hx-get="/kanban/columna/{{ etapa }}" hx-trigger="etapaCambiada from:body">
+  {% set total_etapa = columnas[etapa] | sum(attribute='valor_estimado') %}
+  <h2 class="font-bold text-gray-700">{{ etapa }} &middot; {{ columnas[etapa]|length }} &middot; {{ total_etapa | format_clp }}</h2>
+</div>

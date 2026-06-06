@@ -16,12 +16,7 @@
     <div class="grid grid-cols-5 gap-4">
       {% for etapa in etapas %}
       <div class="bg-gray-200 rounded-lg p-3">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="font-bold text-gray-700">{{ etapa }}</h2>
-          <span class="text-xs font-semibold bg-gray-200 text-gray-700 py-1 px-2 rounded-full">{{ columnas[etapa]|length }}</span>
-        </div>
-        {% set total_etapa = columnas[etapa] | sum(attribute='valor_estimado') %}
-        <div class="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">Total: {{ total_etapa | format_clp }}</div>
+        {% include 'partials/kanban_col_header.html' %}
         
         <div class="min-h-[300px] flex flex-col gap-2 sortable-col" data-etapa="{{ etapa }}">
           {% for p in columnas[etapa] %}
