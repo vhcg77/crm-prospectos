@@ -14,14 +14,24 @@
     
     <div class="flex gap-2 mb-4">
       <button {% if not tiene_ia %}disabled title="Configura tu API key para usar IA"{% endif %} 
+              hx-post="/prospectos/{{ prospecto.id }}/ia/sugerir-paso"
+              hx-target="#modal-container" hx-swap="outerHTML"
+              hx-indicator="this"
               class="bg-purple-100 text-purple-800 border border-purple-200 px-3 py-1.5 rounded text-sm font-medium hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
-        ✨ Sugerir próximo paso
+        ✨ <span class="htmx-indicator">Cargando...</span><span class="indicator-hide">Sugerir próximo paso</span>
       </button>
       <button {% if not tiene_ia %}disabled title="Configura tu API key para usar IA"{% endif %} 
+              hx-get="/prospectos/{{ prospecto.id }}/ia/redactar-email"
+              hx-target="#modal-container" hx-swap="outerHTML"
               class="bg-purple-100 text-purple-800 border border-purple-200 px-3 py-1.5 rounded text-sm font-medium hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1">
         ✉️ Redactar email
       </button>
     </div>
+    <style>
+      .htmx-indicator { display: none; }
+      .htmx-request .htmx-indicator { display: inline; }
+      .htmx-request .indicator-hide { display: none; }
+    </style>
 
     <h3 class="font-semibold text-lg mb-2">Historial de Actividades</h3>
     

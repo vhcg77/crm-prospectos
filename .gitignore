@@ -5,6 +5,7 @@ data/*.db-journal
 # Secretos
 .env
 *.key
+data/api_key.txt
 
 # Build
 build/

@@ -95,11 +95,23 @@ def sugerir_siguiente_paso(prospecto: dict) -> str:
     return _llamar_claude(system, user)
 
 
-def redactar_email(prospecto: dict, objetivo: str) -> str:
+def redactar_email(prospecto: dict, objetivo: str, tono: str = "formal") -> str:
     system = (
-        "Eres un asistente de ventas en Chile. Redacta un email profesional en "
-        "español de Chile, tono cordial y directo, con asunto y cuerpo. "
-        "Longitud media."
+        f"Eres un asistente de ventas en Chile. Redacta un email profesional en "
+        f"español de Chile. Tono requerido: {tono}. "
+        f"Debe incluir asunto y cuerpo, sin placeholders genéricos si tienes la info. "
+        f"Longitud media."
     )
     user = f"Objetivo del email: {objetivo}\n\nDatos del prospecto:\n{prospecto}"
+    return _llamar_claude(system, user)
+
+
+def resumen_pipeline(datos_pipeline: dict) -> str:
+    system = (
+        "Eres un gerente de ventas en Chile analizando el embudo de prospectos. "
+        "Recibes un resumen estadístico (totales por etapa y estancados). "
+        "Devuelve un párrafo breve (máximo 4 líneas) con un diagnóstico rápido "
+        "y una recomendación accionable, en español de Chile, directo y al grano."
+    )
+    user = f"Datos del pipeline:\n{datos_pipeline}"
     return _llamar_claude(system, user)

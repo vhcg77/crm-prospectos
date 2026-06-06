@@ -1,0 +1,44 @@
+<div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded shadow-lg w-full max-w-2xl">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold flex items-center gap-2">
+        <span>✨</span> Redactar Email con IA
+      </h2>
+      <button type="button" onclick="document.getElementById('modal-container').remove()" class="text-gray-400 hover:text-gray-800">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    
+    <form hx-post="/prospectos/{{ prospecto.id }}/ia/redactar-email" hx-target="#modal-container" hx-swap="outerHTML">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Tono del mensaje</label>
+        <select name="tono" class="w-full border border-gray-300 rounded p-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="formal" {% if tono == 'formal' %}selected{% endif %}>Formal y profesional</option>
+          <option value="cercano" {% if tono == 'cercano' %}selected{% endif %}>Cercano y amigable</option>
+          <option value="persuasivo" {% if tono == 'persuasivo' %}selected{% endif %}>Persuasivo y vendedor</option>
+        </select>
+      </div>
+      
+      <div class="flex justify-end gap-2 mb-4">
+        <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center gap-2" id="btn-generar">
+          Generar Borrador
+        </button>
+      </div>
+    </form>
+
+    {% if borrador %}
+    <div class="mt-4">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Borrador generado:</label>
+      <textarea id="email-borrador" rows="8" class="w-full border border-gray-300 rounded p-3 text-sm font-mono bg-gray-50 focus:ring-purple-500 focus:border-purple-500" readonly>{{ borrador }}</textarea>
+      
+      <div class="flex justify-end gap-2 mt-4">
+        <button type="button" onclick="document.getElementById('modal-container').remove()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cerrar</button>
+        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('email-borrador').value); alert('¡Copiado al portapapeles!');" class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+          Copiar al Portapapeles
+        </button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>

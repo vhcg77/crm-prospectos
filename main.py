@@ -25,7 +25,7 @@ from sqlalchemy import or_
 from config import APP_NAME, ENV, STATIC_DIR, TEMPLATES_DIR, API_KEY_PATH
 from database import get_db, init_db
 from models import COLOR_ETAPA, ETAPAS, Prospecto, Actividad
-from ai_client import tiene_api_key, test_conexion
+from ai_client import tiene_api_key, test_conexion, sugerir_siguiente_paso, redactar_email, resumen_pipeline
 
 
 @asynccontextmanager
@@ -307,14 +307,89 @@ def crear_actividad(
         {"prospecto": p, "tiene_ia": tiene_api_key()}
     )
 
-# TODO (Fase 2): rutas /prospectos/{id}/ai/... usando ai_client (degradación elegante).
-@app.post("/prospectos/{id}/ai/sugerir-accion")
-def ai_sugerir_accion(id: int):
-    return HTMLResponse("Sugerencia de IA: Llamar para seguimiento.")
+# --- Funcionalidades de IA (Fase 10) ---
 
-@app.post("/prospectos/{id}/ai/redactar-email")
-def ai_redactar_email(id: int):
-    return HTMLResponse("Borrador generado por IA...")
+@app.post("/prospectos/{id}/ia/sugerir-paso", response_class=HTMLResponse)
+def ai_sugerir_paso(id: int, request: Request, db: Session = Depends(get_db)):
+    p = db.query(Prospecto).filter(Prospecto.id == id).first()
+    if not p:
+        return HTMLResponse("No encontrado", status_code=404)
+    
+    prospecto_dict = p.to_dict()
+    prospecto_dict["actividades"] = [a.to_dict() for a in p.actividades]
+    
+    sugerencia = sugerir_siguiente_paso(prospecto_dict)
+    registrar_actividad(db, p.id, "ia", f"Sugerencia IA: {sugerencia}")
+    
+    # Recargar el panel de actividades
+    return templates.TemplateResponse(
+        request,
+        "detalle_prospecto.html",
+        {"prospecto": p, "tiene_ia": tiene_api_key()}
+    )
+
+@app.get("/prospectos/{id}/ia/redactar-email", response_class=HTMLResponse)
+def ai_redactar_email_modal(id: int, request: Request, db: Session = Depends(get_db)):
+    p = db.query(Prospecto).filter(Prospecto.id == id).first()
+    if not p:
+        return HTMLResponse("No encontrado", status_code=404)
+    return templates.TemplateResponse(
+        request,
+        "partials/email_modal.html",
+        {"prospecto": p, "borrador": None}
+    )
+
+@app.post("/prospectos/{id}/ia/redactar-email", response_class=HTMLResponse)
+def ai_redactar_email_post(
+    id: int, 
+    request: Request, 
+    tono: str = Form("formal"),
+    db: Session = Depends(get_db)
+):
+    p = db.query(Prospecto).filter(Prospecto.id == id).first()
+    if not p:
+        return HTMLResponse("No encontrado", status_code=404)
+    
+    prospecto_dict = p.to_dict()
+    prospecto_dict["actividades"] = [a.to_dict() for a in p.actividades]
+    
+    borrador = redactar_email(prospecto_dict, objetivo="Hacer seguimiento para avanzar la venta", tono=tono)
+    registrar_actividad(db, p.id, "ia", "IA redactó un borrador de email de seguimiento.")
+    
+    return templates.TemplateResponse(
+        request,
+        "partials/email_modal.html",
+        {"prospecto": p, "borrador": borrador, "tono": tono}
+    )
+
+@app.get("/ia/resumen-pipeline", response_class=HTMLResponse)
+def ia_resumen_pipeline_get(request: Request, db: Session = Depends(get_db)):
+    if not tiene_api_key():
+        return templates.TemplateResponse(
+            request,
+            "partials/resumen_pipeline_modal.html",
+            {"error": "Configura tu API key para usar IA."}
+        )
+    prospectos = db.query(Prospecto).all()
+    conteo_por_etapa = {etapa: 0 for etapa in ETAPAS}
+    estancados = 0
+    for p in prospectos:
+        conteo_por_etapa[p.etapa] += 1
+        if p.esta_estancado:
+            estancados += 1
+    
+    datos_pipeline = {
+        "conteo_por_etapa": conteo_por_etapa,
+        "prospectos_estancados": estancados,
+        "total_prospectos": len(prospectos)
+    }
+    
+    resumen = resumen_pipeline(datos_pipeline)
+    return templates.TemplateResponse(
+        request,
+        "partials/resumen_pipeline_modal.html",
+        {"resumen": resumen}
+    )
 
 @app.get("/configuracion", response_class=HTMLResponse)
 def get_configuracion(request: Request):
