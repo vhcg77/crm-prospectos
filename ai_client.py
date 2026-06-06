@@ -10,8 +10,8 @@ crudos a la UI.
 import os
 
 # NOTA: verificar el identificador de modelo vigente en la documentación oficial
-# de Anthropic antes de fijarlo. Los nombres de modelo cambian con el tiempo.
-_MODELO = os.getenv("CLAUDE_MODEL", "claude-3-5-haiku-latest")
+# de OpenAI antes de fijarlo. Los nombres de modelo cambian con el tiempo.
+_MODELO = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 _MENSAJE_NO_DISPONIBLE = "La IA no está disponible en este momento. Intenta de nuevo."
 
 
@@ -21,7 +21,7 @@ def _obtener_api_key() -> str | None:
     Fase 2 (local): leer de variable de entorno o de config del usuario.
     Fase 3 (proxy): esta función desaparece; _llamar_claude apunta a una URL del dev.
     """
-    key = os.getenv("ANTHROPIC_API_KEY")
+    key = os.getenv("OPENAI_API_KEY")
     if key:
         return key.strip()
         
@@ -44,13 +44,12 @@ def test_conexion(api_key: str) -> bool:
     if not api_key:
         return False
     try:
-        from anthropic import Anthropic
-        client = Anthropic(api_key=api_key)
-        client.messages.create(
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key, timeout=10.0)
+        client.chat.completions.create(
             model=_MODELO,
             max_tokens=1,
-            messages=[{"role": "user", "content": "Hola"}],
-            timeout=10,
+            messages=[{"role": "user", "content": "Hola"}]
         )
         return True
     except Exception:
@@ -67,18 +66,18 @@ def _llamar_claude(system: str, user: str) -> str:
     if not api_key:
         return _MENSAJE_NO_DISPONIBLE
     try:
-        from anthropic import Anthropic
+        from openai import OpenAI
 
-        client = Anthropic(api_key=api_key)
-        resp = client.messages.create(
+        client = OpenAI(api_key=api_key, timeout=30.0)
+        resp = client.chat.completions.create(
             model=_MODELO,
             max_tokens=1024,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-            timeout=30,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user}
+            ]
         )
-        partes = [b.text for b in resp.content if getattr(b, "type", "") == "text"]
-        return "\n".join(partes).strip() or _MENSAJE_NO_DISPONIBLE
+        return resp.choices[0].message.content.strip() or _MENSAJE_NO_DISPONIBLE
     except Exception:
         # Degradación elegante: el CRM nunca se rompe por culpa de la IA.
         return _MENSAJE_NO_DISPONIBLE

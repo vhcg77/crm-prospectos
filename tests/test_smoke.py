@@ -30,7 +30,7 @@ def test_crear_prospecto_en_db(db_session):
 
 def test_ia_degrada_sin_key(monkeypatch):
     """Sin API key, la IA devuelve mensaje degradado, no rompe."""
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     import pathlib
     monkeypatch.setattr("config.API_KEY_PATH", pathlib.Path("/ruta/invalida/123"))
     from ai_client import sugerir_siguiente_paso

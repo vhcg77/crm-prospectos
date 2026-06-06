@@ -15,7 +15,7 @@ a = Analysis(
         ('static', 'static'),
     ],
     hiddenimports=[
-        'anthropic',
+        'openai',
         'webview',
     ],
     hookspath=[],
