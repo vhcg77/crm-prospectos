@@ -1,8 +1,8 @@
-<div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+<div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
   <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-bold">Configuración de IA</h2>
-      <button type="button" onclick="document.getElementById('modal-container').remove()" class="text-gray-400 hover:text-gray-800">
+      <button type="button" onclick="document.getElementById('modal-backdrop').remove()" class="text-gray-400 hover:text-gray-800">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
     </div>
@@ -14,7 +14,7 @@
     <div class="bg-rose-100 text-rose-800 p-3 rounded mb-4 text-sm">{{ error }}</div>
     {% endif %}
 
-    <form hx-post="/configuracion" hx-target="#modal-container" hx-swap="outerHTML">
+    <form hx-post="/configuracion" hx-target="#modal-backdrop" hx-swap="outerHTML">
       <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700 mb-1">OpenAI API Key</label>
         <input type="password" name="api_key" placeholder="sk-proj-..." required 
@@ -29,7 +29,7 @@
       </div>
       
       <div class="flex justify-end gap-2">
-        <button type="button" onclick="document.getElementById('modal-container').remove()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cerrar</button>
+        <button type="button" onclick="document.getElementById('modal-backdrop').remove()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cerrar</button>
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Probar y Guardar</button>
       </div>
     </form>
